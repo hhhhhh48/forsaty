@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}كل الفرص — فرصتي{% endblock %}
+
+{% block content %}
+
+<section class="px-6 py-12">
+  <div class="max-w-7xl mx-auto">
+
+    <!-- Header -->
+    <div class="text-center mb-10" data-aos="fade-down">
+      <h1 class="text-4xl md:text-5xl font-black mb-3">
+        <span class="gradient-text">🔍 كل الفرص</span>
+      </h1>
+      <p class="text-gray-400 text-lg">{{ opportunities|length }} فرصة متاحة</p>
+    </div>
+
+    <!-- Filters -->
+    <form method="GET" action="/opportunities" class="glass rounded-2xl p-5 mb-8" data-aos="fade-up">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div class="md:col-span-2 relative">
+          <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xl">🔍</span>
+          <input type="text" name="q" value="{{ q }}" placeholder="ابحث في العنوان، المؤسسة..."
+                 class="w-full bg-white/5 border border-white/10 rounded-xl pr-12 pl-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition">
+        </div>
+
+        <select name="type" class="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500">
+          <option value="">— كل الأنواع —</option>
+          <option value="concours" {% if selected_type == 'concours' %}selected{% endif %}>📝 مسابقة</option>
+          <option value="emploi" {% if selected_type == 'emploi' %}selected{% endif %}>💼 وظيفة</option>
+          <option value="formation" {% if selected_type == 'formation' %}selected{% endif %}>🎓 تكوين</option>
+        </select>
+
+        <select name="sector" class="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500">
+          <option value="">— كل القطاعات —</option>
+          {% for s in sectors %}
+          <option value="{{ s['code'] }}" {% if selected_sector == s['code'] %}selected{% endif %}>
+            {{ s['icon'] }} {{ s['name'] }}
+          </option>
+          {% endfor %}
+        </select>
+
+        <select name="wilaya" class="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 md:col-span-2">
+          <option value="">— كل الولايات —</option>
+          {% for w in wilayas %}
+          <option value="{{ w['code'] }}" {% if selected_wilaya == w['code']|string %}selected{% endif %}>
+            {{ w['code'] }} - {{ w['name'] }}
+          </option>
+          {% endfor %}
+        </select>
+
+        <button type="submit" class="btn-primary rounded-xl text-white font-bold py-3 md:col-span-1">
+          🔍 بحث
+        </button>
+
+        <a href="/opportunities" class="glass rounded-xl text-white font-bold py-3 text-center hover:bg-white/10 transition md:col-span-1">
+          ↻ إعادة تعيين
+        </a>
+      </div>
+    </form>
+
+    <!-- Active Filters -->
+    {% if q or selected_type or selected_sector or selected_wilaya %}
+    <div class="flex flex-wrap gap-2 mb-6" data-aos="fade-up">
+      <span class="text-sm text-gray-400 py-2">الفلاتر النشطة:</span>
+      {% if q %}
+      <span class="px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 text-sm border border-emerald-500/30">
+        🔍 "{{ q }}"
+      </span>
+      {% endif %}
+      {% if selected_type %}
+      <span class="px-3 py-1.5 rounded-full bg-purple-500/20 text-purple-300 text-sm border border-purple-500/30">
+        النوع: {{ selected_type }}
+      </span>
+      {% endif %}
+      {% if selected_sector %}
+      <span class="px-3 py-1.5 rounded-full bg-cyan-500/20 text-cyan-300 text-sm border border-cyan-500/30">
+        قطاع: {{ selected_sector }}
+      </span>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Results -->
+    {% if opportunities %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {% for opp in opportunities %}
+      <a href="/opportunity/{{ opp['id'] }}" class="glass rounded-2xl p-6 card-hover block" data-aos="fade-up">
+        <div class="flex items-start justify-between mb-4">
+          <div class="text-4xl">{{ opp['sector_icon'] or '📋' }}</div>
+          <span class="px-3 py-1 rounded-full text-xs font-bold
+            {% if opp['type'] == 'concours' %}bg-purple-500/20 text-purple-300 border border-purple-500/30
+            {% elif opp['type'] == 'emploi' %}bg-emerald-500/20 text-emerald-300 border border-emerald-500/30
+            {% else %}bg-cyan-500/20 text-cyan-300 border border-cyan-500/30{% endif %}">
+            {% if opp['type'] == 'concours' %}📝 مسابقة
+            {% elif opp['type'] == 'emploi' %}💼 وظيفة
+            {% elif opp['type'] == 'formation' %}🎓 تكوين
+            {% else %}{{ opp['type'] }}{% endif %}
+          </span>
+        </div>
+
+        <h3 class="text-lg font-bold text-white mb-3" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:3rem;">
+          {{ opp['title'] }}
+        </h3>
+
+        {% if opp['organization'] %}
+        <p class="text-sm text-gray-400 mb-3 flex items-center gap-2">
+          <span>🏢</span>
+          <span class="truncate">{{ opp['organization'] }}</span>
+        </p>
+        {% endif %}
+
+        <div class="flex flex-wrap gap-2 text-xs">
+          <span class="px-2 py-1 rounded-lg bg-white/5 text-gray-300">
+            📍 {{ opp['wilaya_name'] or 'كل الولايات' }}
+          </span>
+          {% if opp['deadline'] %}
+          <span class="px-2 py-1 rounded-lg bg-amber-500/10 text-amber-300">⏰ {{ opp['deadline'] }}</span>
+          {% endif %}
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="glass rounded-3xl p-16 text-center" data-aos="fade-up">
+      <div class="text-7xl mb-5">📭</div>
+      <h3 class="text-2xl font-bold text-white mb-3">لا توجد نتائج</h3>
+      <p class="text-gray-400 mb-6">جرب تغيير الفلاتر أو البحث بكلمات مختلفة</p>
+      <a href="/opportunities" class="btn-primary inline-block px-8 py-3 rounded-xl text-white font-bold">
+        ↻ عرض كل الفرص
+      </a>
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+
+{% endblock %}

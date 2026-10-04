@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+data/forsaty.db
+data/cron.log
+*.log
+.env
+.secrets
+scans.db

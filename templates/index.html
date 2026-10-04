@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}فرصتي — كل الفرص في مكان واحد{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="px-6 pt-12 pb-16 text-center">
+  <div class="max-w-4xl mx-auto">
+
+    <div class="inline-flex items-center gap-2 glass px-4 py-2 rounded-full mb-8" data-aos="fade-down">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      <span class="text-sm text-gray-300">مجاني 100% للشباب الجزائري 🇩🇿</span>
+    </div>
+
+    <h1 class="text-5xl md:text-7xl font-black mb-6 leading-tight" data-aos="fade-up">
+      <span class="gradient-text">كل الفرص</span><br>
+      <span class="text-white">في مكان واحد 🇩🇿</span>
+    </h1>
+
+    <p class="text-lg md:text-xl text-gray-300 mb-10 max-w-2xl mx-auto leading-relaxed" data-aos="fade-up" data-aos-delay="100">
+      وظائف، مسابقات، منح وتكوين — كل ما تحتاجه لتبدأ مسارك المهني.
+      بدون تعقيد. بدون رسوم. من مصادر رسمية موثوقة.
+    </p>
+
+    <form action="/opportunities" method="GET" class="max-w-2xl mx-auto mb-10" data-aos="fade-up" data-aos-delay="200">
+      <div class="glass rounded-2xl p-2 flex items-center gap-2 shadow-2xl shadow-emerald-500/10">
+        <span class="text-2xl pr-2">🔍</span>
+        <input type="text" name="q" placeholder="ابحث عن وظيفة، مسابقة، قطاع..."
+               class="flex-1 bg-transparent border-0 text-white text-lg py-3 px-2 focus:outline-none placeholder-gray-500">
+        <button type="submit" class="btn-primary px-6 py-3 rounded-xl text-white font-bold">ابحث</button>
+      </div>
+    </form>
+
+    <div class="flex flex-col sm:flex-row gap-3 justify-center items-center" data-aos="fade-up" data-aos-delay="300">
+      <a href="/opportunities?type=concours" class="glass px-6 py-3 rounded-xl text-white font-bold hover:bg-white/10 transition w-full sm:w-auto">📝 المسابقات</a>
+      <a href="/opportunities?type=emploi" class="glass px-6 py-3 rounded-xl text-white font-bold hover:bg-white/10 transition w-full sm:w-auto">💼 الوظائف</a>
+      <a href="/opportunities?type=formation" class="glass px-6 py-3 rounded-xl text-white font-bold hover:bg-white/10 transition w-full sm:w-auto">🎓 التكوين</a>
+    </div>
+  </div>
+</section>
+
+<!-- Stats -->
+<section class="px-6 py-8">
+  <div class="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4" data-aos="fade-up">
+    <div class="glass rounded-2xl p-6 text-center card-hover">
+      <div class="text-4xl font-black gradient-text mb-1">{{ total_opps }}</div>
+      <div class="text-sm text-gray-400">📋 فرصة</div>
+    </div>
+    <div class="glass rounded-2xl p-6 text-center card-hover">
+      <div class="text-4xl font-black text-purple-400 mb-1">{{ total_concours }}</div>
+      <div class="text-sm text-gray-400">📝 مسابقة</div>
+    </div>
+    <div class="glass rounded-2xl p-6 text-center card-hover">
+      <div class="text-4xl font-black text-emerald-400 mb-1">{{ total_emploi }}</div>
+      <div class="text-sm text-gray-400">💼 وظيفة</div>
+    </div>
+    <div class="glass rounded-2xl p-6 text-center card-hover">
+      <div class="text-4xl font-black text-pink-400 mb-1">{{ visits.unique }}</div>
+      <div class="text-sm text-gray-400">👥 زائر</div>
+    </div>
+  </div>
+</section>
+
+<!-- Latest -->
+<section class="px-6 py-16">
+  <div class="max-w-7xl mx-auto">
+    <div class="flex items-end justify-between mb-8 flex-wrap gap-4" data-aos="fade-up">
+      <div>
+        <div class="text-sm font-bold text-emerald-400 mb-2 tracking-widest">🆕 جديد</div>
+        <h2 class="text-3xl md:text-4xl font-black text-white">أحدث الفرص</h2>
+      </div>
+      <a href="/opportunities" class="text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-2 transition">
+        عرض الكل <span>←</span>
+      </a>
+    </div>
+
+    {% if opportunities %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {% for opp in opportunities %}
+      <a href="/opportunity/{{ opp['id'] }}" class="glass rounded-2xl p-6 card-hover block relative" data-aos="fade-up">
+        {% if opp['is_new'] %}
+        <span class="absolute top-4 left-4 px-2 py-1 rounded-full text-xs font-bold bg-red-500/20 text-red-300 border border-red-500/30 animate-pulse">🆕 جديد</span>
+        {% endif %}
+
+        <div class="flex items-start justify-between mb-4 mt-2">
+          <div class="text-4xl">{{ opp['sector_icon'] or '📋' }}</div>
+          <span class="px-3 py-1 rounded-full text-xs font-bold
+            {% if opp['type'] == 'concours' %}bg-purple-500/20 text-purple-300 border border-purple-500/30
+            {% elif opp['type'] == 'emploi' %}bg-emerald-500/20 text-emerald-300 border border-emerald-500/30
+            {% else %}bg-cyan-500/20 text-cyan-300 border border-cyan-500/30{% endif %}">
+            {% if opp['type'] == 'concours' %}مسابقة
+            {% elif opp['type'] == 'emploi' %}وظيفة
+            {% elif opp['type'] == 'formation' %}تكوين
+            {% else %}{{ opp['type'] }}{% endif %}
+          </span>
+        </div>
+
+        <h3 class="text-lg font-bold text-white mb-3 leading-snug" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:3rem;">{{ opp['title'] }}</h3>
+
+        {% if opp['organization'] %}
+        <p class="text-sm text-gray-400 mb-3 flex items-center gap-2">
+          <span>🏢</span><span class="truncate">{{ opp['organization'] }}</span>
+        </p>
+        {% endif %}
+
+        <div class="flex flex-wrap gap-2 text-xs">
+          <span class="px-2 py-1 rounded-lg bg-white/5 text-gray-300">📍 {{ opp['wilaya_name'] or 'كل الولايات' }}</span>
+          {% if opp['deadline'] %}
+          <span class="px-2 py-1 rounded-lg bg-amber-500/10 text-amber-300">⏰ {{ opp['deadline'] }}</span>
+          {% endif %}
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="glass rounded-3xl p-16 text-center">
+      <div class="text-6xl mb-4">📭</div>
+      <h3 class="text-2xl font-bold text-white mb-3">لا توجد فرص بعد</h3>
+      <p class="text-gray-400">سيتم إضافة الفرص قريباً</p>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- Sectors -->
+<section class="px-6 py-16">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-10" data-aos="fade-up">
+      <div class="text-sm font-bold text-cyan-400 mb-2 tracking-widest">تصفح حسب القطاع</div>
+      <h2 class="text-3xl md:text-4xl font-black text-white">🏢 القطاعات النشطة</h2>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      {% for sector in sectors %}
+      <a href="/opportunities?sector={{ sector['code'] }}" class="glass rounded-xl p-5 text-center card-hover block" data-aos="zoom-in">
+        <div class="text-3xl mb-2">{{ sector['icon'] }}</div>
+        <div class="text-sm font-bold text-white mb-1">{{ sector['name'] }}</div>
+        <div class="text-xs text-emerald-400 font-bold">{{ sector['count'] }} فرصة</div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="px-6 py-16">
+  <div class="max-w-4xl mx-auto text-center">
+    <div class="glass rounded-3xl p-12 relative overflow-hidden" data-aos="zoom-in">
+      <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-cyan-500/10"></div>
+      <div class="relative">
+        <div class="text-6xl mb-4">🚀</div>
+        <h2 class="text-3xl md:text-4xl font-black text-white mb-4">ابدأ رحلتك اليوم</h2>
+        <p class="text-gray-300 text-lg mb-8 max-w-xl mx-auto">كل الفرص التي تحتاجها، محدّثة تلقائياً، في مكان واحد مجاني</p>
+        <a href="/opportunities" class="btn-primary inline-block px-10 py-4 rounded-xl text-white font-bold text-lg">🔍 استكشف كل الفرص</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

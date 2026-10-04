@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}{{ opp['title'] }} — فرصتي{% endblock %}
+
+{% block content %}
+
+<section class="px-6 py-12">
+  <div class="max-w-4xl mx-auto">
+
+    <div class="flex items-center gap-2 text-sm text-gray-400 mb-6 flex-wrap" data-aos="fade-down">
+      <a href="/" class="hover:text-emerald-400 transition">🏠 الرئيسية</a>
+      <span>/</span>
+      <a href="/opportunities" class="hover:text-emerald-400 transition">كل الفرص</a>
+      <span>/</span>
+      {% if opp['sector_code'] %}
+      <a href="/opportunities?sector={{ opp['sector_code'] }}" class="hover:text-emerald-400 transition">{{ opp['sector_name'] or opp['sector_code'] }}</a>
+      <span>/</span>
+      {% endif %}
+      <span class="text-gray-500 truncate">{{ opp['title'][:40] }}...</span>
+    </div>
+
+    <div class="glass rounded-3xl overflow-hidden" data-aos="fade-up">
+
+      <div class="p-8 md:p-12 border-b border-white/5 relative">
+        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-cyan-500 to-purple-500"></div>
+
+        <div class="flex items-start justify-between gap-4 flex-wrap mb-6">
+          <div class="text-6xl">{{ opp['sector_icon'] or '📋' }}</div>
+          <div class="flex gap-2 flex-wrap">
+            <span class="px-4 py-2 rounded-full text-sm font-bold
+              {% if opp['type'] == 'concours' %}bg-purple-500/20 text-purple-300 border border-purple-500/30
+              {% elif opp['type'] == 'emploi' %}bg-emerald-500/20 text-emerald-300 border border-emerald-500/30
+              {% else %}bg-cyan-500/20 text-cyan-300 border border-cyan-500/30{% endif %}">
+              {% if opp['type'] == 'concours' %}📝 مسابقة
+              {% elif opp['type'] == 'emploi' %}💼 وظيفة
+              {% elif opp['type'] == 'formation' %}🎓 تكوين
+              {% else %}{{ opp['type'] }}{% endif %}
+            </span>
+            {% if opp['positions_count'] %}
+            <span class="px-4 py-2 rounded-full text-sm font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">🎯 {{ opp['positions_count'] }} منصب</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <h1 class="text-3xl md:text-4xl font-black text-white leading-tight mb-4">{{ opp['title'] }}</h1>
+
+        {% if opp['organization'] %}
+        <p class="text-lg text-gray-300 flex items-center gap-2"><span>🏢</span> {{ opp['organization'] }}</p>
+        {% endif %}
+      </div>
+
+      <div class="p-8 md:p-12 grid grid-cols-1 md:grid-cols-2 gap-4 border-b border-white/5">
+        {% if opp['sector_name'] %}
+        <div class="glass rounded-xl p-5">
+          <div class="text-xs text-gray-400 mb-2">🏢 القطاع</div>
+          <div class="font-bold text-white text-lg">{{ opp['sector_icon'] }} {{ opp['sector_name'] }}</div>
+        </div>
+        {% endif %}
+
+        <div class="glass rounded-xl p-5">
+          <div class="text-xs text-gray-400 mb-2">📍 الولاية</div>
+          <div class="font-bold text-white text-lg">{{ opp['wilaya_name'] or 'كل الولايات' }}</div>
+        </div>
+
+        {% if opp['deadline'] %}
+        <div class="glass rounded-xl p-5 border-amber-500/30">
+          <div class="text-xs text-gray-400 mb-2">⏰ آخر أجل</div>
+          <div class="font-bold text-amber-300 text-lg">{{ opp['deadline'] }}</div>
+        </div>
+        {% endif %}
+
+        {% if opp['added_at'] %}
+        <div class="glass rounded-xl p-5">
+          <div class="text-xs text-gray-400 mb-2">📅 تاريخ الإضافة</div>
+          <div class="font-bold text-white text-sm">{{ opp['added_at'][:10] }}</div>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="p-8 md:p-12 space-y-8">
+
+        {% if opp['description'] %}
+        <div>
+          <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-2"><span>📝</span> الوصف</h2>
+          <div class="text-gray-300 leading-relaxed whitespace-pre-line">{{ opp['description'] }}</div>
+        </div>
+        {% endif %}
+
+        {% if opp['requirements'] %}
+        <div>
+          <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-2"><span>✅</span> الشروط والمتطلبات</h2>
+          <div class="text-gray-300 leading-relaxed whitespace-pre-line">{{ opp['requirements'] }}</div>
+        </div>
+        {% endif %}
+
+        {% if opp['source_name'] %}
+        <div class="pt-4 border-t border-white/5">
+          <p class="text-sm text-gray-400 flex items-center gap-2">
+            <span>📡</span>
+            <span>المصدر: <span class="text-gray-300 font-bold">{{ opp['source_name'] }}</span></span>
+          </p>
+        </div>
+        {% endif %}
+
+        <!-- Share -->
+        <div class="pt-6 border-t border-white/5">
+          <h3 class="text-lg font-bold text-white mb-4">📤 شارك هذه الفرصة</h3>
+          <div class="flex gap-3 flex-wrap">
+            <a href="https://wa.me/?text={{ opp['title']|urlencode }}%20-%20{{ request.url|urlencode }}"
+               target="_blank" rel="noopener"
+               class="flex-1 min-w-[140px] bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 rounded-xl py-3 px-4 text-center text-green-300 font-bold transition">
+              💬 واتساب
+            </a>
+            <a href="https://t.me/share/url?url={{ request.url|urlencode }}&text={{ opp['title']|urlencode }}"
+               target="_blank" rel="noopener"
+               class="flex-1 min-w-[140px] bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-xl py-3 px-4 text-center text-blue-300 font-bold transition">
+              ✈️ تيليجرام
+            </a>
+            <button onclick="navigator.clipboard.writeText('{{ request.url }}'); this.innerText='✅ تم النسخ'; setTimeout(()=>this.innerText='🔗 نسخ الرابط',2000);"
+               class="flex-1 min-w-[140px] bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl py-3 px-4 text-center text-gray-300 font-bold transition">
+              🔗 نسخ الرابط
+            </button>
+          </div>
+        </div>
+
+        {% if opp['url'] and opp['url'] != '#' %}
+        <a href="{{ opp['url'] }}" target="_blank" rel="noopener"
+           class="btn-primary block text-center py-5 rounded-xl text-white font-bold text-lg">
+          🌐 الذهاب إلى المصدر الرسمي
+        </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="text-center mt-8">
+      <a href="/opportunities" class="text-emerald-400 hover:text-emerald-300 font-bold">← العودة إلى كل الفرص</a>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}
