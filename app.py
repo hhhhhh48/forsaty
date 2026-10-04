@@ -2,7 +2,34 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from functools import wraps
 from datetime import datetime
-from database import get_db
+import os
+from database import get_db, init_db, seed_data
+
+# ═══════ تهيئة قاعدة البيانات عند البدء ═══════
+os.makedirs("data", exist_ok=True)
+
+try:
+    init_db()
+    seed_data()
+except Exception as e:
+    print(f"Init error: {e}")
+
+# إنشاء جداول الزوار والإحصائيات
+try:
+    _conn = get_db()
+    _c = _conn.cursor()
+    _c.execute("""CREATE TABLE IF NOT EXISTS visits (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ip TEXT, page TEXT,
+        visited_at TEXT DEFAULT CURRENT_TIMESTAMP)""")
+    _c.execute("""CREATE TABLE IF NOT EXISTS stats (
+        key TEXT PRIMARY KEY, value INTEGER DEFAULT 0)""")
+    _c.execute("INSERT OR IGNORE INTO stats (key, value) VALUES ('total_visits', 0)")
+    _c.execute("INSERT OR IGNORE INTO stats (key, value) VALUES ('unique_visitors', 0)")
+    _conn.commit()
+    _conn.close()
+except Exception as e:
+    print(f"Tables error: {e}")
 
 app = Flask(__name__)
 app.secret_key = "forsaty-secret-2026-change-me"
