@@ -42,7 +42,7 @@ except Exception as e:
 # ═══════ الحماية ═══════
 app = Flask(__name__)
 app.secret_key = "forsaty-secret-2026-change-me"
-ADMIN_PASSWORD = "admin2026"
+ADMIN_PASSWORD = "Forsaty@Dz2026"
 
 
 def login_required(f):
