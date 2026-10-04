@@ -1,16 +1,23 @@
 """app.py - منصة فرصتي الكاملة"""
+import os
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from functools import wraps
 from datetime import datetime
-import os
-from database import get_db, init_db, seed_data
+from database import get_db, init_db
 
-# ═══════ تهيئة قاعدة البيانات عند البدء ═══════
+# محاولة استيراد seed_all (إن وُجد)
+try:
+    from seed import seed_all
+except ImportError:
+    seed_all = None
+
+# ═══════ تهيئة قاعدة البيانات عند بدء التطبيق ═══════
 os.makedirs("data", exist_ok=True)
 
 try:
     init_db()
-    seed_data()
+    if seed_all:
+        seed_all()
 except Exception as e:
     print(f"Init error: {e}")
 
@@ -31,6 +38,8 @@ try:
 except Exception as e:
     print(f"Tables error: {e}")
 
+
+# ═══════ الحماية ═══════
 app = Flask(__name__)
 app.secret_key = "forsaty-secret-2026-change-me"
 ADMIN_PASSWORD = "admin2026"
@@ -84,7 +93,7 @@ def get_visits():
         return {"total": 0, "unique": 0}
 
 
-# ═══════════════════════ الرئيسية ═══════════════════════
+# ═══════ الرئيسية ═══════
 @app.route("/")
 def home():
     track_visit("home")
@@ -134,7 +143,7 @@ def home():
                           visits=visits)
 
 
-# ═══════════════════════ الفرص ═══════════════════════
+# ═══════ الفرص ═══════
 @app.route("/opportunities")
 def opportunities_page():
     track_visit("opportunities")
@@ -190,7 +199,7 @@ def opportunities_page():
                           selected_type=otype)
 
 
-# ═══════════════════════ التفاصيل ═══════════════════════
+# ═══════ التفاصيل ═══════
 @app.route("/opportunity/<int:oid>")
 def opportunity_detail(oid):
     track_visit("detail")
@@ -212,19 +221,18 @@ def opportunity_detail(oid):
     return render_template("detail.html", opp=opp)
 
 
-# ═══════════════════════ من نحن ═══════════════════════
+# ═══════ من نحن / الخصوصية ═══════
 @app.route("/about")
 def about():
     return render_template("about.html")
 
 
-# ═══════════════════════ الخصوصية ═══════════════════════
 @app.route("/privacy")
 def privacy():
     return render_template("privacy.html")
 
 
-# ═══════════════════════ الدخول ═══════════════════════
+# ═══════ الدخول ═══════
 @app.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
     error = None
@@ -242,7 +250,7 @@ def admin_logout():
     return redirect(url_for("admin_login"))
 
 
-# ═══════════════════════ لوحة الإدارة ═══════════════════════
+# ═══════ لوحة الإدارة ═══════
 @app.route("/admin")
 @login_required
 def admin():
@@ -328,7 +336,7 @@ def admin_delete(oid):
     return redirect(url_for("admin"))
 
 
-# ═══════════════════════ APIs ═══════════════════════
+# ═══════ APIs ═══════
 @app.route("/api/stats")
 def api_stats():
     conn = get_db()
@@ -342,17 +350,14 @@ def api_stats():
     c.execute("SELECT COUNT(*) FROM opportunities WHERE type = 'formation'")
     formation = c.fetchone()[0]
     conn.close()
-    v = get_visits()
     return jsonify({
         "total": total,
         "emploi": emplois,
         "concours": concours,
         "formation": formation,
-        "visits": v,
+        "visits": get_visits(),
     })
 
-
-import os
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
