@@ -1,5 +1,6 @@
 """app.py - منصة فرصتي الكاملة"""
 import os
+import subprocess
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from functools import wraps
 from datetime import datetime
@@ -39,12 +40,13 @@ except Exception as e:
     print(f"Tables error: {e}")
 
 
-# ═══════ الحماية ═══════
+# ═══════ تهيئة Flask ═══════
 app = Flask(__name__)
-app.secret_key = "forsaty-secret-2026-change-me"
+app.secret_key = os.environ.get("SECRET_KEY", "forsaty-secret-2026-change-me")
 ADMIN_PASSWORD = "Forsaty@Dz2026"
 
 
+# ═══════ أدوات مساعدة ═══════
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -232,34 +234,20 @@ def privacy():
     return render_template("privacy.html")
 
 
-# ═══════ الدخول ═══════
+# ═══════ تسجيل الدخول ═══════
 @app.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
     error = None
     if request.method == "POST":
         if request.form.get("password") == ADMIN_PASSWORD:
             session["is_admin"] = True
+            session.permanent = True
             return redirect(url_for("admin"))
         error = "كلمة السر خاطئة"
     return render_template("admin_login.html", error=error)
 
-@app.route("/admin/refetch")
-@login_required
-def admin_refetch():
-    """يشغّل auto_fetch لجلب الفرص"""
-    import subprocess
-    try:
-        result = subprocess.run(
-            ["python", "auto_fetch.py"],
-            capture_output=True, text=True, timeout=120
-        )
-        output = result.stdout[-1000:] if result.stdout else "لا مخرجات"
-    except Exception as e:
-        output = f"خطأ: {e}"
-    return f"<pre style='background:#000;color:#0f0;padding:20px;font-family:monospace'>{output}</pre><br><a href='/admin' style='color:#10b981'>← عودة للإدارة</a>"
 
-
-def admin_logout():@app.route("/admin/logout")
+@app.route("/admin/logout")
 def admin_logout():
     session.pop("is_admin", None)
     return redirect(url_for("admin_login"))
@@ -289,6 +277,35 @@ def admin():
                           opportunities=opps, visits=visits)
 
 
+# ═══════ جلب الفرص تلقائياً ═══════
+@app.route("/admin/refetch")
+@login_required
+def admin_refetch():
+    try:
+        result = subprocess.run(
+            ["python", "auto_fetch.py"],
+            capture_output=True, text=True, timeout=120
+        )
+        output = result.stdout[-1500:] if result.stdout else "لا مخرجات"
+        if result.stderr:
+            output += "\n\n⚠️ stderr:\n" + result.stderr[-500:]
+    except Exception as e:
+        output = f"خطأ: {str(e)[:200]}"
+
+    return f"""<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>جلب الفرص</title>
+<style>
+body{{font-family:monospace;background:#0a0a0f;color:#10b981;padding:20px;direction:rtl}}
+pre{{background:#000;padding:20px;border-radius:10px;border:1px solid #10b981;white-space:pre-wrap;word-break:break-all}}
+a{{color:#06b6d4;text-decoration:none;display:inline-block;margin-top:20px;padding:10px 20px;background:#10b981;color:#000;border-radius:8px;font-weight:bold}}
+</style></head><body>
+<h1 style="color:#fff">🔄 جلب الفرص</h1>
+<pre>{output}</pre>
+<a href="/admin">← عودة للإدارة</a>
+</body></html>"""
+
+
+# ═══════ إضافة فرصة يدوياً ═══════
 @app.route("/admin/add", methods=["POST"])
 @login_required
 def admin_add():
@@ -374,6 +391,7 @@ def api_stats():
     })
 
 
+# ═══════ التشغيل ═══════
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
