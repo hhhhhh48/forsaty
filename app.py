@@ -243,8 +243,23 @@ def admin_login():
         error = "كلمة السر خاطئة"
     return render_template("admin_login.html", error=error)
 
+@app.route("/admin/refetch")
+@login_required
+def admin_refetch():
+    """يشغّل auto_fetch لجلب الفرص"""
+    import subprocess
+    try:
+        result = subprocess.run(
+            ["python", "auto_fetch.py"],
+            capture_output=True, text=True, timeout=120
+        )
+        output = result.stdout[-1000:] if result.stdout else "لا مخرجات"
+    except Exception as e:
+        output = f"خطأ: {e}"
+    return f"<pre style='background:#000;color:#0f0;padding:20px;font-family:monospace'>{output}</pre><br><a href='/admin' style='color:#10b981'>← عودة للإدارة</a>"
 
-@app.route("/admin/logout")
+
+def admin_logout():@app.route("/admin/logout")
 def admin_logout():
     session.pop("is_admin", None)
     return redirect(url_for("admin_login"))
