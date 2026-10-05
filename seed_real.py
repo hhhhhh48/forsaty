@@ -254,7 +254,9 @@ def seed_real():
             """, (
                 opp["title"], opp["description"], opp["type"],
                 sector_id, opp["org"], opp["positions"],
-                opp["deadline"], opp["url"], opp["req"],
+                opp["deadline"],
+                opp["url"] + '#opp' + str(abs(hash(opp["title"])) % 100000),
+                opp["req"],
                 datetime.now().isoformat()
             ))
             added += 1
