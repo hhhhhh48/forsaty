@@ -6,11 +6,17 @@ from functools import wraps
 from datetime import datetime
 from database import get_db, init_db
 
-# محاولة استيراد seed_all (إن وُجد)
+# محاولة استيراد seed_all
 try:
     from seed import seed_all
 except ImportError:
     seed_all = None
+
+# محاولة استيراد seed_real
+try:
+    from seed_real import seed_real
+except ImportError:
+    seed_real = None
 
 # ═══════ تهيئة قاعدة البيانات عند بدء التطبيق ═══════
 os.makedirs("data", exist_ok=True)
@@ -19,6 +25,9 @@ try:
     init_db()
     if seed_all:
         seed_all()
+    if seed_real:
+        n = seed_real()
+        print(f"✅ Seed real: {n} فرصة أضيفت")
 except Exception as e:
     print(f"Init error: {e}")
 
@@ -335,6 +344,9 @@ def admin_add():
         positions = request.form.get("positions", "").strip()
         positions_val = int(positions) if positions.isdigit() else None
 
+        import random
+        unique_url = (request.form.get("url", "").strip() or "#") + "#" + str(random.randint(10000, 99999))
+
         c.execute("""
             INSERT INTO opportunities
             (title, description, type, sector_id, wilaya_id, organization,
@@ -348,7 +360,7 @@ def admin_add():
             request.form.get("organization", "").strip(),
             positions_val,
             request.form.get("deadline", "").strip() or None,
-            request.form.get("url", "").strip() or "#",
+            unique_url,
             request.form.get("requirements", "").strip(),
         ))
         conn.commit()
